@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — DB World Cup Challenge</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN
+════════════════════════════════════════════ -->
+<div id="admin-login" class="screen active">
+  <div class="login-box">
+    <a href="index.html" class="back-link">← Back to Game</a>
+    <div class="db-brand-badge" role="img" aria-label="Deutsche Bank logo">
+      <svg class="db-logo db-logo-mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <rect class="dblm-frame" x="8" y="8" width="84" height="84"/>
+        <line class="dblm-slash" x1="27" y1="79" x2="73" y2="21"/>
+      </svg>
+      <span class="db-wordmark">Deutsche Bank</span>
+    </div>
+    <h1>Admin Panel</h1>
+    <p>Enter the admin password to manage module content and questions.</p>
+
+    <div class="login-form">
+      <input type="password" id="admin-password" placeholder="Password" autocomplete="off">
+      <p id="login-error"></p>
+      <button class="btn-primary" id="btn-login">Login →</button>
+    </div>
+
+    <p class="hint">Default password: DB2024</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     ADMIN PANEL
+════════════════════════════════════════════ -->
+<div id="admin-panel" class="screen">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-top">
+      <svg class="db-logo db-logo-mark small" viewBox="0 0 100 100" aria-label="Deutsche Bank logo" role="img">
+        <rect class="dblm-frame" x="8" y="8" width="84" height="84"/>
+        <line class="dblm-slash" x1="27" y1="79" x2="73" y2="21"/>
+      </svg>
+      <div>
+        <h2>Admin Panel</h2>
+        <span class="sidebar-brand">Deutsche Bank · Tech Fair</span>
+      </div>
+    </div>
+
+    <nav id="module-nav">
+      <!-- Populated by admin.js -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="btn-back-game">← Back to Game</a>
+    </div>
+  </aside>
+
+  <!-- Main editor area -->
+  <main class="admin-main" id="admin-main">
+    <!-- Populated by admin.js -->
+  </main>
+
+</div>
+
+
+<script src="js/data.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

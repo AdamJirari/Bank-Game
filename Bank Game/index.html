@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deutsche Bank — World Cup Challenge</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1: WELCOME
+════════════════════════════════════════════ -->
+<div id="screen-welcome" class="screen active">
+
+  <!-- ── Corporate nav strip ───────────────────────────────────── -->
+  <nav class="welcome-nav">
+    <div class="wn-brand">
+      <img class="db-logo db-logo-mark small" src="images/db-logo.png" alt="Deutsche Bank">
+      <span class="db-wordmark">Deutsche Bank</span>
+    </div>
+  </nav>
+
+  <!-- ── Full-width split layout ──────────────────────────────── -->
+  <div class="welcome-hero">
+
+    <!-- Left: brand & game identity -->
+    <div class="welcome-left">
+      <div class="wl-content">
+        <div class="wl-eyebrow"><span class="wl-eyebrow-line"></span>Bank on Tech</div>
+        <h1 class="wl-title">World Cup<br><em>Challenge</em></h1>
+      </div>
+      <!-- Pitch strip teaser at the foot of the panel -->
+      <div class="wl-pitch-strip">
+        <div class="wl-pitch-center-line"></div>
+        <div class="wl-pitch-circle"></div>
+        <div class="wl-pitch-dot"></div>
+        <div class="wl-pitch-ball">⚽</div>
+      </div>
+    </div>
+
+    <!-- Right: entry form -->
+    <div class="welcome-right">
+      <!-- Mini stats row -->
+      <div class="wr-stats">
+        <div class="wr-stat"><span class="wrs-n">4</span><span class="wrs-l">Modules</span></div>
+        <div class="wr-stat-sep"></div>
+        <div class="wr-stat"><span class="wrs-n">12</span><span class="wrs-l">Questions</span></div>
+        <div class="wr-stat-sep"></div>
+        <div class="wr-stat"><span class="wrs-n">⚽</span><span class="wrs-l">Live Scores</span></div>
+      </div>
+
+      <div class="wr-card">
+
+        <div class="wr-card-header">
+          <p class="wr-pre">Ready to play?</p>
+          <h2 class="wr-heading">Enter Your Team</h2>
+        </div>
+
+        <div class="form-group-welcome">
+          <label for="team-name">Team Name</label>
+          <input type="text" id="team-name" placeholder="e.g. Payments FC" maxlength="32" autocomplete="off">
+        </div>
+
+        <button class="btn-primary" id="btn-start">Kick Off! ⚽</button>
+<button class="btn-secondary" id="btn-leaderboard">🏆 View Leaderboard</button>
+
+      </div>
+
+      <a href="admin.html" class="btn-admin-link">Admin Panel →</a>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2: FIELD (main game)
+════════════════════════════════════════════ -->
+<div id="screen-field" class="screen">
+
+  <header class="game-header">
+    <span class="hdr-team" id="display-team-name">Team Name</span>
+    <span class="hdr-title">
+      <img class="db-logo db-logo-mark small" src="images/db-logo.png" alt="Deutsche Bank logo">
+      <span class="hdr-title-text">Deutsche Bank <em>World Cup Challenge</em></span>
+    </span>
+    <div class="hdr-score">
+      <span class="hdr-score-label">Score</span>
+      <span class="hdr-score-value" id="display-score">0</span>
+    </div>
+  </header>
+
+  <div class="field-container">
+    <!-- Stadium crowd rings -->
+    <div class="stadium-surround">
+
+      <div class="field" id="soccer-field">
+
+        <!-- ── Field markings ── -->
+        <div class="field-lines">
+          <div class="fl-center-line"></div>
+          <div class="fl-center-circle"></div>
+          <div class="fl-center-dot"></div>
+
+          <!-- Left side -->
+          <div class="fl-penalty left"></div>
+          <div class="fl-goal-area left"></div>
+          <div class="fl-penalty-arc left"></div>
+
+          <!-- Right side -->
+          <div class="fl-penalty right"></div>
+          <div class="fl-goal-area right"></div>
+          <div class="fl-penalty-arc right"></div>
+
+          <!-- Corner arcs -->
+          <div class="fl-corner tl"></div>
+          <div class="fl-corner tr"></div>
+          <div class="fl-corner bl"></div>
+          <div class="fl-corner br"></div>
+        </div>
+
+        <!-- Goals (outside field border) -->
+        <div class="fl-goal left"><div class="goal-net"></div></div>
+        <div class="fl-goal right"><div class="goal-net"></div></div>
+
+        <!-- Goalkeepers -->
+        <div class="goalkeeper left" title="Goalkeeper">🧤</div>
+        <div class="goalkeeper right" title="Goalkeeper">🧤</div>
+
+        <!-- Corner flags -->
+        <div class="corner-flag" style="top:3px;left:3px">🚩</div>
+        <div class="corner-flag flip" style="top:3px;right:3px">🚩</div>
+        <div class="corner-flag" style="bottom:3px;left:3px">🚩</div>
+        <div class="corner-flag flip" style="bottom:3px;right:3px">🚩</div>
+
+        <!-- SVG overlay for pass trails -->
+        <svg id="field-svg-overlay" class="field-svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+
+        <!-- Module stations (populated by game.js) -->
+        <div id="stations-container"></div>
+
+        <!-- Ball (launcher moves horizontally; inner ball arcs vertically) -->
+        <div id="ball-launcher" class="ball-launcher">
+          <div id="soccer-ball" class="ball">⚽</div>
+        </div>
+
+        <!-- Field edge labels -->
+        <div class="field-edge-labels">
+          <span>← Kickoff</span>
+          <span>GOAL! →</span>
+        </div>
+
+      </div><!-- /field -->
+    </div><!-- /stadium-surround -->
+  </div><!-- /field-container -->
+
+  <!-- Module status bar -->
+  <div class="module-status" id="module-status"></div>
+
+  <!-- Floating pause control -->
+  <button id="btn-pause" class="btn-pause-fab" title="Pause (Esc)" aria-label="Pause game">⏸️</button>
+
+</div><!-- /screen-field -->
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3: VICTORY
+════════════════════════════════════════════ -->
+<div id="screen-victory" class="screen">
+  <div class="victory-content">
+    <span class="trophy-emoji">🏆</span>
+    <h1>GOOOAL!!!</h1>
+    <p class="victory-team" id="victory-team-name">Team Name</p>
+    <div class="victory-score-display">
+      <span class="big" id="final-score">0</span>
+      <span class="unit"> pts</span>
+    </div>
+    <p class="victory-time-display" id="victory-time">Time: 0:00</p>
+    <div class="victory-chips" id="victory-modules"></div>
+    <div class="victory-btns">
+      <button class="btn-primary"   id="btn-play-again">Play Again ⚽</button>
+      <button class="btn-secondary" id="btn-see-leaderboard">Leaderboard 🏆</button>
+    </div>
+  </div>
+  <div class="confetti-container" id="confetti"></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL: QUIZ
+════════════════════════════════════════════ -->
+<div id="quiz-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="quiz-header">
+      <span class="quiz-icon" id="modal-icon">💳</span>
+      <div class="quiz-meta">
+        <h3 id="modal-module-name">Module 1</h3>
+        <p id="modal-team-name">Team Name</p>
+        <p id="modal-module-desc" style="font-style:italic;opacity:.5;font-size:.75rem;"></p>
+      </div>
+      <span class="quiz-counter" id="question-counter">1 / 3</span>
+      <div class="quiz-timer" id="quiz-timer">
+        <svg class="qt-ring" viewBox="0 0 36 36">
+          <circle class="qt-ring-bg" cx="18" cy="18" r="16"></circle>
+          <circle class="qt-ring-fg" id="qt-ring-fg" cx="18" cy="18" r="16"></circle>
+        </svg>
+        <span class="qt-value" id="qt-value">30</span>
+      </div>
+    </div>
+    <div class="progress-dots" id="progress-dots"></div>
+    <p class="question-text" id="question-text">Question text goes here</p>
+    <div class="options-grid" id="options-container"></div>
+    <div class="feedback-area" id="feedback-area"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL: MODULE COMPLETE
+════════════════════════════════════════════ -->
+<div id="complete-modal" class="modal-overlay hidden">
+  <div class="modal-box complete-box">
+    <span class="complete-anim" id="complete-animation">⚽</span>
+    <h2 id="complete-title">Module Complete!</h2>
+    <p id="complete-subtitle">The ball moves forward!</p>
+    <div class="complete-stats" id="complete-stats"></div>
+    <button class="btn-primary" id="btn-continue" style="margin-top:8px;">Continue →</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL: ARCADE MINI-GAME (side-scrolling soccer shooter)
+════════════════════════════════════════════ -->
+<div id="arcade-modal" class="modal-overlay hidden">
+  <div class="arcade-container">
+
+    <!-- Phase 1: Ready -->
+    <div id="arcade-ready" class="arcade-ready">
+      <h2>⚽ Defend &amp; Score!</h2>
+      <p class="ar-desc">
+        Fire soccer balls at incoming targets to build your
+        <strong>score multiplier</strong>. Don't let targets get past you!
+      </p>
+      <p class="ar-quiz-preview" id="arcade-quiz-preview">Quiz score: 0 pts — now multiply it!</p>
+
+      <div class="ar-target-legend">
+        <span class="ar-legend-item">🧤 <span class="ar-legend-good">+10</span></span>
+        <span class="ar-legend-item">🔶 <span class="ar-legend-good">+15</span></span>
+        <span class="ar-legend-item">🥅 <span class="ar-legend-good">+20</span></span>
+        <span class="ar-legend-item">⭐ <span class="ar-legend-good">+50</span></span>
+        <span class="ar-legend-item" style="color:#FFB900">SWIFT <span class="ar-legend-good">+25</span></span>
+        <span class="ar-legend-item" style="color:#f472b6">ISO20022 <span class="ar-legend-good">+40</span></span>
+        <span class="ar-legend-item danger">🟥 <span class="ar-legend-bad">-20</span></span>
+        <span class="ar-legend-item danger" style="color:#ef4444">FRAUD <span class="ar-legend-bad">-25</span></span>
+      </div>
+
+      <div class="ar-controls-hint">
+        <span>🖱️ Move to aim</span>
+        <span>Click / <kbd>Space</kbd> to shoot</span>
+        <span>↑↓ Arrow keys</span>
+        <span>🎮 Controller supported</span>
+      </div>
+
+      <button class="btn-primary arcade-start-btn" id="btn-arcade-start">Start Round! ⚡</button>
+    </div>
+
+    <!-- Phase 2: Game -->
+    <div id="arcade-play" class="arcade-play" style="display:none">
+      <canvas id="arcade-canvas"></canvas>
+    </div>
+
+    <!-- Phase 3: Results -->
+    <div id="arcade-result" class="arcade-result" style="display:none">
+      <h2 id="arcade-result-title">🏆 Round Complete!</h2>
+
+      <div class="ar-stats">
+        <div class="ar-stat-row"><span>Targets Hit</span><span id="ar-hits">0</span></div>
+        <div class="ar-stat-row"><span>Accuracy</span><span id="ar-accuracy">0%</span></div>
+        <div class="ar-stat-row"><span>Arcade Score</span><span id="ar-score">0</span></div>
+        <div class="ar-stat-row ar-stat-mult"><span>Multiplier</span><span id="ar-mult">1.0x</span></div>
+      </div>
+
+      <div class="ar-calc">
+        <span class="ar-calc-quiz" id="ar-quiz-pts">0</span>
+        <span class="ar-calc-unit">pts</span>
+        <span class="ar-calc-times">&times;</span>
+        <span class="ar-calc-mult" id="ar-final-mult">1.0x</span>
+        <span class="ar-calc-eq">=</span>
+        <span class="ar-calc-total" id="ar-total">0</span>
+        <span class="ar-calc-unit">pts</span>
+      </div>
+
+      <button class="btn-primary" id="btn-arcade-continue">Continue →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL: LEADERBOARD
+════════════════════════════════════════════ -->
+<div id="leaderboard-modal" class="modal-overlay hidden">
+  <div class="modal-box leaderboard-box">
+    <h2>🏆 Leaderboard</h2>
+    <div id="leaderboard-list"></div>
+    <button class="btn-secondary lb-close" id="btn-close-leaderboard">Close</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MODAL: PAUSE MENU
+════════════════════════════════════════════ -->
+<div id="pause-modal" class="modal-overlay hidden">
+  <div class="modal-box pause-box">
+
+    <div id="pause-main">
+      <h2>⏸️ Game Paused</h2>
+      <p class="pause-team" id="pause-team-name">Team Name</p>
+      <button class="btn-primary" id="btn-resume">Resume ▶️</button>
+      <button class="btn-secondary" id="btn-pause-quit">Main Menu 🏠</button>
+    </div>
+
+    <div id="pause-confirm" class="hidden">
+      <h2>End Game?</h2>
+      <p class="pause-warn">Your current progress and score will be lost.</p>
+      <button class="btn-danger" id="btn-confirm-quit">End Game</button>
+      <button class="btn-secondary" id="btn-cancel-quit">Cancel</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
