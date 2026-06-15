@@ -67,3 +67,39 @@ button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+.markdown-box {
+  min-height: 160px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.95rem;
+}
+
+.markdown-box h1,
+.markdown-box h2,
+.markdown-box h3,
+.markdown-box h4,
+.markdown-box h5,
+.markdown-box h6 {
+  margin: 0.6em 0 0.3em;
+}
+
+.markdown-box p {
+  margin: 0.4em 0;
+}
+
+.markdown-box ul,
+.markdown-box ol {
+  margin: 0.4em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-box code {
+  background: #f1f1f1;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+}

@@ -3,7 +3,51 @@ const tokenEl = document.getElementById('token');
 const bodyEl = document.getElementById('body');
 const responseEl = document.getElementById('response');
 const extractedEl = document.getElementById('extracted');
+const formattedEl = document.getElementById('formatted');
 const sendBtn = document.getElementById('sendBtn');
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderInline(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return html;
+}
+
+function renderBlock(block) {
+  const lines = block.split('\n');
+
+  const headingMatch = lines.length === 1 && lines[0].match(/^(#{1,6})\s+(.*)$/);
+  if (headingMatch) {
+    const level = headingMatch[1].length;
+    return `<h${level}>${renderInline(headingMatch[2])}</h${level}>`;
+  }
+
+  if (lines.every((l) => /^\s*[-*]\s+/.test(l))) {
+    const items = lines.map((l) => `<li>${renderInline(l.replace(/^\s*[-*]\s+/, ''))}</li>`);
+    return `<ul>${items.join('')}</ul>`;
+  }
+
+  if (lines.every((l) => /^\s*\d+\.\s+/.test(l))) {
+    const items = lines.map((l) => `<li>${renderInline(l.replace(/^\s*\d+\.\s+/, ''))}</li>`);
+    return `<ol>${items.join('')}</ol>`;
+  }
+
+  return `<p>${lines.map(renderInline).join('<br>')}</p>`;
+}
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  return text
+    .split(/\n\s*\n/)
+    .filter((block) => block.trim())
+    .map(renderBlock)
+    .join('\n');
+}
 
 sendBtn.addEventListener('click', async () => {
   const endpoint = endpointEl.value.trim();
@@ -15,6 +59,7 @@ sendBtn.addEventListener('click', async () => {
   sendBtn.disabled = true;
   responseEl.value = 'Sending...';
   extractedEl.value = '';
+  formattedEl.innerHTML = '';
 
   try {
     const res = await fetch(endpoint, {
@@ -31,7 +76,9 @@ sendBtn.addEventListener('click', async () => {
 
     try {
       const data = JSON.parse(text);
-      extractedEl.value = data.response ?? '';
+      const extracted = data.response ?? '';
+      extractedEl.value = extracted;
+      formattedEl.innerHTML = renderMarkdown(extracted);
     } catch {
       extractedEl.value = '';
     }
