@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Analyzer</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Payment Analyzer</h1>
+
+    <div class="field">
+      <label for="endpoint">Endpoint URL</label>
+      <input type="text" id="endpoint" placeholder="https://.../generateContent" />
+    </div>
+
+    <div class="field">
+      <label for="token">Bearer Token</label>
+      <input type="text" id="token" placeholder="ya29.a0AfH6..." autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="body">Request Body</label>
+      <textarea id="body" placeholder="Paste the raw request body here&hellip;"></textarea>
+    </div>
+
+    <button id="sendBtn">Send</button>
+
+    <div class="field">
+      <label for="response">Response</label>
+      <textarea id="response" readonly placeholder="Response will appear here&hellip;"></textarea>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
