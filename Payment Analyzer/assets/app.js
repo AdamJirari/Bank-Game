@@ -110,9 +110,9 @@ temperatureEl.addEventListener('input', () => {
 function buildRequestBody() {
   const entry = instructions.find((e) => e.name === sysInstructionSelectEl.value);
   const body = {
-    contents: [{ role: 'user', parts: [{ text: promptEl.value }] }],
-    systemInstruction: { parts: [{ text: entry ? entry.instruction : '' }] },
-    generationConfig: { temperature: parseFloat(temperatureEl.value) }
+    prompt: promptEl.value,
+    temperature: parseFloat(temperatureEl.value),
+    system_instruction: entry ? entry.instruction : ''
   };
   return JSON.stringify(body, null, 2);
 }
