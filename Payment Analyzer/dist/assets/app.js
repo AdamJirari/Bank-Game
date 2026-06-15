@@ -2,6 +2,7 @@ const endpointEl = document.getElementById('endpoint');
 const tokenEl = document.getElementById('token');
 const bodyEl = document.getElementById('body');
 const responseEl = document.getElementById('response');
+const extractedEl = document.getElementById('extracted');
 const sendBtn = document.getElementById('sendBtn');
 
 sendBtn.addEventListener('click', async () => {
@@ -13,6 +14,7 @@ sendBtn.addEventListener('click', async () => {
 
   sendBtn.disabled = true;
   responseEl.value = 'Sending...';
+  extractedEl.value = '';
 
   try {
     const res = await fetch(endpoint, {
@@ -26,6 +28,13 @@ sendBtn.addEventListener('click', async () => {
 
     const text = await res.text();
     responseEl.value = `Status: ${res.status} ${res.statusText}\n\n${text}`;
+
+    try {
+      const data = JSON.parse(text);
+      extractedEl.value = data.response ?? '';
+    } catch {
+      extractedEl.value = '';
+    }
   } catch (e) {
     responseEl.value =
       'Error: ' +
