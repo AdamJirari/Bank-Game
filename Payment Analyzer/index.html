@@ -31,6 +31,25 @@
       </div>
 
       <div class="field">
+        <label for="paymentFormatSelect">Payment Format</label>
+        <select id="paymentFormatSelect"></select>
+        <div class="row">
+          <button id="newFormatBtn" type="button" class="secondary">New</button>
+          <button id="deleteFormatBtn" type="button" class="secondary">Delete</button>
+        </div>
+      </div>
+
+      <button id="repairBtn" type="button" class="repair">Repair Payment</button>
+
+      <div class="field hidden" id="repairSection">
+        <div class="repair-header">
+          <label for="repairDiff">Repaired Payment</label>
+          <button id="copyRepairBtn" type="button" class="secondary hidden">Copy</button>
+        </div>
+        <div id="repairDiff" class="diff-box"></div>
+      </div>
+
+      <div class="field">
         <label for="temperature">Temperature: <span id="temperatureValue">0.20</span></label>
         <input type="range" id="temperature" min="0" max="1" step="0.01" value="0.2" />
       </div>
