@@ -1,10 +1,121 @@
 const endpointEl = document.getElementById('endpoint');
 const tokenEl = document.getElementById('token');
 const bodyEl = document.getElementById('body');
+const promptEl = document.getElementById('prompt');
+const temperatureEl = document.getElementById('temperature');
+const temperatureValueEl = document.getElementById('temperatureValue');
+const sysInstructionSelectEl = document.getElementById('sysInstructionSelect');
+const sysInstructionTextEl = document.getElementById('sysInstructionText');
+const newInstructionBtn = document.getElementById('newInstructionBtn');
+const saveInstructionBtn = document.getElementById('saveInstructionBtn');
+const deleteInstructionBtn = document.getElementById('deleteInstructionBtn');
 const responseEl = document.getElementById('response');
 const extractedEl = document.getElementById('extracted');
 const formattedEl = document.getElementById('formatted');
 const sendBtn = document.getElementById('sendBtn');
+
+// ---------------------------------------------------------------------
+// System instructions (per payment format), persisted in localStorage
+// ---------------------------------------------------------------------
+const INSTRUCTIONS_KEY = 'paymentAnalyzer.systemInstructions';
+
+const DEFAULT_INSTRUCTIONS = [
+  {
+    name: 'PACS.008',
+    instruction:
+      'You are an ISO 20022 payments expert and systems engineer. Analyze XML messages for correctness, schema compliance, and business rule violations. Clearly identify the fatal errors and validation issues, and explain why they would fail processing. Return concise and structured explanations.'
+  }
+];
+
+function loadInstructions() {
+  try {
+    const raw = localStorage.getItem(INSTRUCTIONS_KEY);
+    const parsed = raw && JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length) return parsed;
+  } catch {
+    /* fall back to defaults */
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_INSTRUCTIONS));
+}
+
+function saveInstructions() {
+  localStorage.setItem(INSTRUCTIONS_KEY, JSON.stringify(instructions));
+}
+
+let instructions = loadInstructions();
+
+function populateInstructionSelect(selectedName) {
+  sysInstructionSelectEl.innerHTML = '';
+  instructions.forEach((entry) => {
+    const opt = document.createElement('option');
+    opt.value = entry.name;
+    opt.textContent = entry.name;
+    sysInstructionSelectEl.appendChild(opt);
+  });
+  if (selectedName && instructions.some((e) => e.name === selectedName)) {
+    sysInstructionSelectEl.value = selectedName;
+  }
+  updateInstructionText();
+}
+
+function updateInstructionText() {
+  const entry = instructions.find((e) => e.name === sysInstructionSelectEl.value);
+  sysInstructionTextEl.value = entry ? entry.instruction : '';
+}
+
+sysInstructionSelectEl.addEventListener('change', updateInstructionText);
+
+newInstructionBtn.addEventListener('click', () => {
+  const name = prompt('Name for this payment format / system instruction:');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (instructions.some((e) => e.name === trimmed)) {
+    alert('An entry with that name already exists.');
+    return;
+  }
+  instructions.push({ name: trimmed, instruction: '' });
+  saveInstructions();
+  populateInstructionSelect(trimmed);
+  sysInstructionTextEl.focus();
+});
+
+saveInstructionBtn.addEventListener('click', () => {
+  const entry = instructions.find((e) => e.name === sysInstructionSelectEl.value);
+  if (!entry) return;
+  entry.instruction = sysInstructionTextEl.value;
+  saveInstructions();
+});
+
+deleteInstructionBtn.addEventListener('click', () => {
+  const name = sysInstructionSelectEl.value;
+  if (!name) return;
+  if (!confirm(`Delete "${name}"?`)) return;
+  instructions = instructions.filter((e) => e.name !== name);
+  saveInstructions();
+  populateInstructionSelect();
+});
+
+populateInstructionSelect(instructions[0]?.name);
+
+// ---------------------------------------------------------------------
+// Temperature slider
+// ---------------------------------------------------------------------
+temperatureEl.addEventListener('input', () => {
+  temperatureValueEl.textContent = parseFloat(temperatureEl.value).toFixed(2);
+});
+
+// ---------------------------------------------------------------------
+// Build the request body from prompt + temperature + system instruction
+// ---------------------------------------------------------------------
+function buildRequestBody() {
+  const entry = instructions.find((e) => e.name === sysInstructionSelectEl.value);
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: promptEl.value }] }],
+    systemInstruction: { parts: [{ text: entry ? entry.instruction : '' }] },
+    generationConfig: { temperature: parseFloat(temperatureEl.value) }
+  };
+  return JSON.stringify(body, null, 2);
+}
 
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -54,6 +165,10 @@ sendBtn.addEventListener('click', async () => {
   if (!endpoint) {
     responseEl.value = 'Please enter an endpoint URL.';
     return;
+  }
+
+  if (promptEl.value.trim()) {
+    bodyEl.value = buildRequestBody();
   }
 
   sendBtn.disabled = true;

@@ -21,6 +21,13 @@ h1 {
   margin: 0 0 20px;
 }
 
+h2 {
+  font-size: 1.1rem;
+  margin: 28px 0 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ddd;
+}
+
 label {
   display: block;
   font-weight: 600;
@@ -33,7 +40,8 @@ label {
 }
 
 input[type="text"],
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 8px 10px;
   font-size: 0.95rem;
@@ -46,6 +54,20 @@ textarea {
   resize: vertical;
   min-height: 160px;
   font-size: 0.85rem;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.row button {
+  margin-bottom: 0;
 }
 
 button {
@@ -66,6 +88,17 @@ button:hover {
 button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+}
+
+button.secondary {
+  background: #6b7280;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+button.secondary:hover {
+  background: #4b5563;
 }
 
 .markdown-box {

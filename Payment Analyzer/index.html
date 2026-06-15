@@ -25,6 +25,29 @@
       <textarea id="body" placeholder="Paste the raw request body here&hellip;"></textarea>
     </div>
 
+    <h2>Request Body 2</h2>
+
+    <div class="field">
+      <label for="prompt">Prompt</label>
+      <textarea id="prompt" placeholder="Paste the payment message here&hellip;"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="temperature">Temperature: <span id="temperatureValue">0.20</span></label>
+      <input type="range" id="temperature" min="0" max="1" step="0.01" value="0.2" />
+    </div>
+
+    <div class="field">
+      <label for="sysInstructionSelect">System Instruction</label>
+      <select id="sysInstructionSelect"></select>
+      <div class="row">
+        <button id="newInstructionBtn" type="button" class="secondary">New</button>
+        <button id="saveInstructionBtn" type="button" class="secondary">Save</button>
+        <button id="deleteInstructionBtn" type="button" class="secondary">Delete</button>
+      </div>
+      <textarea id="sysInstructionText" placeholder="System instruction for the selected format&hellip;"></textarea>
+    </div>
+
     <button id="sendBtn">Send</button>
 
     <div class="field">
