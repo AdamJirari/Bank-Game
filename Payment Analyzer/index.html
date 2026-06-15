@@ -3,51 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment Analyzer</title>
+  <title>Deutsche Bank | Galileo AI Payment Analyzer</title>
+  <link rel="icon" type="image/png" href="assets/db-logo.png" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
   <div class="container">
-    <div class="header-row">
-      <h1>Payment Analyzer</h1>
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/db-logo.png" alt="Deutsche Bank" class="brand-logo" />
+        <div class="brand-text">
+          <span class="brand-name">Deutsche Bank</span>
+          <span class="brand-tagline">Galileo AI Payment Analyzer</span>
+        </div>
+      </div>
       <button id="settingsBtn" type="button" class="icon-btn" title="Settings" aria-label="Settings">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.09-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.24 0-.43.17-.47.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.483.483 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.09.73 1.69.98l.38 2.65c.04.25.24.42.47.42h4c.24 0 .43-.17.47-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
         </svg>
       </button>
-    </div>
+    </header>
 
-    <div class="field">
-      <label for="prompt">Prompt</label>
-      <textarea id="prompt" placeholder="Paste the payment message here&hellip;"></textarea>
-    </div>
-
-    <div class="field">
-      <label for="temperature">Temperature: <span id="temperatureValue">0.20</span></label>
-      <input type="range" id="temperature" min="0" max="1" step="0.01" value="0.2" />
-    </div>
-
-    <div class="field">
-      <label for="sysInstructionSelect">System Instruction</label>
-      <select id="sysInstructionSelect"></select>
-      <div class="row">
-        <button id="newInstructionBtn" type="button" class="secondary">New</button>
-        <button id="showInstructionBtn" type="button" class="secondary">Show</button>
-        <button id="deleteInstructionBtn" type="button" class="secondary">Delete</button>
+    <div class="panel">
+      <div class="field">
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" placeholder="Paste the payment message here&hellip;"></textarea>
       </div>
-      <div id="sysInstructionPanel" class="hidden">
-        <textarea id="sysInstructionText" placeholder="System instruction for the selected format&hellip;"></textarea>
+
+      <div class="field">
+        <label for="temperature">Temperature: <span id="temperatureValue">0.20</span></label>
+        <input type="range" id="temperature" min="0" max="1" step="0.01" value="0.2" />
+      </div>
+
+      <div class="field">
+        <label for="sysInstructionSelect">System Instruction</label>
+        <select id="sysInstructionSelect"></select>
         <div class="row">
-          <button id="saveInstructionBtn" type="button" class="secondary">Save</button>
+          <button id="newInstructionBtn" type="button" class="secondary">New</button>
+          <button id="showInstructionBtn" type="button" class="secondary">Show</button>
+          <button id="deleteInstructionBtn" type="button" class="secondary">Delete</button>
+        </div>
+        <div id="sysInstructionPanel" class="hidden">
+          <textarea id="sysInstructionText" placeholder="System instruction for the selected format&hellip;"></textarea>
+          <div class="row">
+            <button id="saveInstructionBtn" type="button" class="secondary">Save</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <button id="sendBtn">Send</button>
+      <button id="sendBtn">Send</button>
 
-    <div class="field">
-      <label for="formatted">Response</label>
-      <div id="formatted" class="markdown-box"></div>
+      <div class="field">
+        <label for="formatted">Response</label>
+        <div id="formatted" class="markdown-box"></div>
+      </div>
     </div>
   </div>
 
