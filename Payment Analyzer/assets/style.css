@@ -18,7 +18,18 @@ body {
 
 h1 {
   font-size: 1.5rem;
-  margin: 0 0 20px;
+  margin: 0;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.hidden {
+  display: none;
 }
 
 label {
@@ -92,6 +103,64 @@ button.secondary {
 
 button.secondary:hover {
   background: #4b5563;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: #555;
+}
+
+.icon-btn:hover {
+  background: #e5e7eb;
+}
+
+.icon-btn:hover svg {
+  fill: #1a1a1a;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 6px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.modal h2 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
 }
 
 .markdown-box {

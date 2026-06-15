@@ -5,11 +5,59 @@ const temperatureEl = document.getElementById('temperature');
 const temperatureValueEl = document.getElementById('temperatureValue');
 const sysInstructionSelectEl = document.getElementById('sysInstructionSelect');
 const sysInstructionTextEl = document.getElementById('sysInstructionText');
+const sysInstructionPanelEl = document.getElementById('sysInstructionPanel');
 const newInstructionBtn = document.getElementById('newInstructionBtn');
+const showInstructionBtn = document.getElementById('showInstructionBtn');
 const saveInstructionBtn = document.getElementById('saveInstructionBtn');
 const deleteInstructionBtn = document.getElementById('deleteInstructionBtn');
 const formattedEl = document.getElementById('formatted');
 const sendBtn = document.getElementById('sendBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+// ---------------------------------------------------------------------
+// Settings (endpoint + bearer token), persisted in localStorage
+// ---------------------------------------------------------------------
+const SETTINGS_KEY = 'paymentAnalyzer.settings';
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (saved) {
+      endpointEl.value = saved.endpoint || '';
+      tokenEl.value = saved.token || '';
+    }
+  } catch {
+    /* ignore invalid saved settings */
+  }
+}
+
+function openSettings() {
+  settingsOverlay.classList.remove('hidden');
+}
+
+function closeSettings() {
+  settingsOverlay.classList.add('hidden');
+}
+
+loadSettings();
+
+settingsBtn.addEventListener('click', openSettings);
+closeSettingsBtn.addEventListener('click', closeSettings);
+
+settingsOverlay.addEventListener('click', (e) => {
+  if (e.target === settingsOverlay) closeSettings();
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+  localStorage.setItem(
+    SETTINGS_KEY,
+    JSON.stringify({ endpoint: endpointEl.value.trim(), token: tokenEl.value.trim() })
+  );
+  closeSettings();
+});
 
 // ---------------------------------------------------------------------
 // System instructions (per payment format), persisted in localStorage
@@ -62,6 +110,24 @@ function updateInstructionText() {
 
 sysInstructionSelectEl.addEventListener('change', updateInstructionText);
 
+function showInstructionPanel() {
+  sysInstructionPanelEl.classList.remove('hidden');
+  showInstructionBtn.textContent = 'Hide';
+}
+
+function hideInstructionPanel() {
+  sysInstructionPanelEl.classList.add('hidden');
+  showInstructionBtn.textContent = 'Show';
+}
+
+showInstructionBtn.addEventListener('click', () => {
+  if (sysInstructionPanelEl.classList.contains('hidden')) {
+    showInstructionPanel();
+  } else {
+    hideInstructionPanel();
+  }
+});
+
 newInstructionBtn.addEventListener('click', () => {
   const name = prompt('Name for this payment format / system instruction:');
   if (!name || !name.trim()) return;
@@ -73,6 +139,7 @@ newInstructionBtn.addEventListener('click', () => {
   instructions.push({ name: trimmed, instruction: '' });
   saveInstructions();
   populateInstructionSelect(trimmed);
+  showInstructionPanel();
   sysInstructionTextEl.focus();
 });
 
