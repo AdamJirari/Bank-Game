@@ -30,6 +30,27 @@ const repairBtn = document.getElementById('repairBtn');
 const repairSection = document.getElementById('repairSection');
 const repairDiffEl = document.getElementById('repairDiff');
 const copyRepairBtn = document.getElementById('copyRepairBtn');
+const explainBtn = document.getElementById('explainBtn');
+const explainSection = document.getElementById('explainSection');
+const repairExplanationEl = document.getElementById('repairExplanation');
+const chatModeBtn = document.getElementById('chatModeBtn');
+const repairModeBtn = document.getElementById('repairModeBtn');
+const chatModeTab = document.getElementById('chatModeTab');
+const repairModeTab = document.getElementById('repairModeTab');
+
+// ---------------------------------------------------------------------
+// Chat Mode / Repair Mode tabs
+// ---------------------------------------------------------------------
+function setActiveTab(tab) {
+  const isChat = tab === 'chat';
+  chatModeBtn.classList.toggle('active', isChat);
+  repairModeBtn.classList.toggle('active', !isChat);
+  chatModeTab.classList.toggle('hidden', !isChat);
+  repairModeTab.classList.toggle('hidden', isChat);
+}
+
+chatModeBtn.addEventListener('click', () => setActiveTab('chat'));
+repairModeBtn.addEventListener('click', () => setActiveTab('repair'));
 
 // ---------------------------------------------------------------------
 // Settings (endpoint + bearer token), persisted in localStorage
@@ -385,6 +406,42 @@ function renderDiff(oldText, newText) {
 }
 
 // ---------------------------------------------------------------------
+// Best-effort XML pretty-printer, used to normalize payment messages
+// before repairing/diffing so formatting alone doesn't show as a change
+// ---------------------------------------------------------------------
+function formatPaymentMessage(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed.startsWith('<')) return trimmed;
+
+  const normalized = trimmed.replace(/>\s+</g, '><').replace(/></g, '>\n<');
+  const indentUnit = '  ';
+  let depth = 0;
+  const lines = [];
+
+  normalized.split('\n').forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) return;
+
+    if (/^<\/[^>]+>$/.test(line)) {
+      depth = Math.max(0, depth - 1);
+      lines.push(indentUnit.repeat(depth) + line);
+      return;
+    }
+
+    lines.push(indentUnit.repeat(depth) + line);
+
+    const isSelfClosing = /^<[^>]+\/>$/.test(line);
+    const isDeclaration = /^<[!?]/.test(line);
+    const isOpenAndClose = /^<([\w:.-]+)(?:\s[^>]*)?>.*<\/\1>$/.test(line);
+    if (!isSelfClosing && !isDeclaration && !isOpenAndClose) {
+      depth++;
+    }
+  });
+
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------
 // "Chat about this" - follow-up conversation about the analyzed payment
 // ---------------------------------------------------------------------
 const CHAT_MESSAGE_LIMIT = 50;
@@ -545,8 +602,9 @@ chatInputEl.addEventListener('keydown', (e) => {
 // Repair Payment - ask the AI to return only the corrected message
 // ---------------------------------------------------------------------
 let lastRepairedPayment = '';
+let lastFormattedOriginal = '';
 
-function buildRepairRequestBody(format) {
+function buildRepairRequestBody(format, message) {
   const instruction =
     `You are an automated ${format} payment repair engine. ` +
     `You will be given a ${format} payment message that may contain errors, invalid values, or schema/business rule violations. ` +
@@ -556,7 +614,25 @@ function buildRepairRequestBody(format) {
     'no markdown formatting, and no code fences.';
 
   return JSON.stringify({
-    prompt: promptEl.value,
+    prompt: message,
+    temperature: parseFloat(temperatureEl.value),
+    system_instruction: instruction
+  });
+}
+
+function buildExplainRequestBody(format, original, repaired) {
+  const instruction =
+    `You are an automated ${format} payment repair engine. ` +
+    `You previously repaired the ${format} payment message below, going from the "Original" version to the "Repaired" version. ` +
+    'Explain what changes were made and why they were necessary to make the message valid and compliant, ' +
+    'in clear, structured terms for a payments operations analyst. Reference specific fields where relevant.';
+
+  const message =
+    `Original ${format} message:\n${original}\n\nRepaired ${format} message:\n${repaired}\n\n` +
+    'Explain the changes made between the original and repaired messages above.';
+
+  return JSON.stringify({
+    prompt: message,
     temperature: parseFloat(temperatureEl.value),
     system_instruction: instruction
   });
@@ -574,6 +650,8 @@ repairBtn.addEventListener('click', async () => {
 
   repairSection.classList.remove('hidden');
   copyRepairBtn.classList.add('hidden');
+  explainBtn.classList.add('hidden');
+  explainSection.classList.add('hidden');
 
   if (!endpoint) {
     repairDiffEl.innerHTML = '<p>Please enter an endpoint URL.</p>';
@@ -593,7 +671,7 @@ repairBtn.addEventListener('click', async () => {
   repairBtn.disabled = true;
   repairDiffEl.innerHTML = '<p>Repairing&hellip;</p>';
 
-  const original = promptEl.value;
+  const formattedOriginal = formatPaymentMessage(promptEl.value);
 
   try {
     const res = await fetch(endpoint, {
@@ -602,7 +680,7 @@ repairBtn.addEventListener('click', async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${tokenEl.value.trim()}`
       },
-      body: buildRepairRequestBody(format)
+      body: buildRepairRequestBody(format, formattedOriginal)
     });
 
     const text = await res.text();
@@ -615,11 +693,13 @@ repairBtn.addEventListener('click', async () => {
     }
 
     if (res.ok && data && typeof data.response === 'string') {
-      const repaired = stripCodeFence(data.response);
-      repairDiffEl.innerHTML = renderDiff(original, repaired);
+      const repaired = formatPaymentMessage(stripCodeFence(data.response));
+      repairDiffEl.innerHTML = renderDiff(formattedOriginal, repaired);
+      lastFormattedOriginal = formattedOriginal;
       lastRepairedPayment = repaired;
       copyRepairBtn.classList.remove('hidden');
       copyRepairBtn.textContent = 'Copy';
+      explainBtn.classList.remove('hidden');
     } else {
       repairDiffEl.innerHTML =
         `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
@@ -650,6 +730,51 @@ copyRepairBtn.addEventListener('click', () => {
       }, 1500);
     }
   );
+});
+
+explainBtn.addEventListener('click', async () => {
+  const endpoint = endpointEl.value.trim();
+  if (!endpoint || !lastFormattedOriginal || !lastRepairedPayment) return;
+
+  const format = paymentFormatSelectEl.value;
+
+  explainSection.classList.remove('hidden');
+  explainBtn.disabled = true;
+  repairExplanationEl.innerHTML = '<p>Explaining&hellip;</p>';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${tokenEl.value.trim()}`
+      },
+      body: buildExplainRequestBody(format, lastFormattedOriginal, lastRepairedPayment)
+    });
+
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+
+    if (res.ok && data && typeof data.response === 'string') {
+      repairExplanationEl.innerHTML = renderMarkdown(data.response);
+    } else {
+      repairExplanationEl.innerHTML =
+        `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
+    }
+  } catch (e) {
+    repairExplanationEl.innerHTML =
+      `<p>Error: ${escapeHtml(e.message)}</p>` +
+      '<p>If this says "Failed to fetch", the endpoint is likely blocking the request via CORS ' +
+      '(it needs to return Access-Control-Allow-Origin for browser requests).</p>';
+  } finally {
+    explainBtn.disabled = false;
+  }
 });
 
 sendBtn.addEventListener('click', async () => {
