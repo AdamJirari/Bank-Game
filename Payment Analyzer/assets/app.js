@@ -33,6 +33,10 @@ const copyRepairBtn = document.getElementById('copyRepairBtn');
 const explainBtn = document.getElementById('explainBtn');
 const explainSection = document.getElementById('explainSection');
 const repairExplanationEl = document.getElementById('repairExplanation');
+const fourEyeCheckBtn = document.getElementById('fourEyeCheckBtn');
+const fourEyeSection = document.getElementById('fourEyeSection');
+const fourEyeConfidenceEl = document.getElementById('fourEyeConfidence');
+const fourEyeReportEl = document.getElementById('fourEyeReport');
 const chatModeBtn = document.getElementById('chatModeBtn');
 const repairModeBtn = document.getElementById('repairModeBtn');
 const chatModeTab = document.getElementById('chatModeTab');
@@ -719,6 +723,56 @@ function buildExplainRequestBody(format, original, repaired) {
   });
 }
 
+function buildFourEyeRequestBody(format, original, repaired) {
+  const instruction =
+    `You are a second, independent reviewer performing a "four eyes" check on a ${format} payment repair, ` +
+    'as part of a dual-control review process. A first pass already corrected the payment message below, going ' +
+    'from the "Original" version to the "Repaired" version. ' +
+    'Independently verify the repaired message: confirm every change made was correct and necessary, and check the ' +
+    'repaired message end-to-end for any remaining errors, invalid values, or schema/business rule violations - ' +
+    'including issues the first pass may have missed or introduced. ' +
+    'If you find remaining issues, clearly list each additional change that is still needed (field, current value, ' +
+    'corrected value, and reason). If the repair is fully correct and complete, state that explicitly. ' +
+    'Respond in exactly this format: the first line must be "Confidence: <N>" where <N> is a whole number from 0 to ' +
+    '100 representing your confidence that the repaired message is fully correct and compliant, followed by a blank ' +
+    'line, then your findings in markdown.';
+
+  const message =
+    `Original ${format} message (before repair):\n${original}\n\n` +
+    `Repaired ${format} message (after repair):\n${repaired}\n\n` +
+    'Perform the four eyes check described above on the repaired message.';
+
+  return JSON.stringify({
+    prompt: message,
+    temperature: parseFloat(temperatureEl.value),
+    system_instruction: instruction
+  });
+}
+
+function parseFourEyeResponse(text) {
+  const trimmed = stripCodeFence(text);
+  const match = trimmed.match(/^\s*Confidence:\s*(\d{1,3})\s*%?\s*\n+([\s\S]*)$/i);
+  if (match) {
+    const confidence = Math.max(0, Math.min(100, parseInt(match[1], 10)));
+    return { confidence, report: match[2].trim() };
+  }
+  return { confidence: null, report: trimmed };
+}
+
+function renderConfidence(confidence) {
+  if (confidence === null) {
+    fourEyeConfidenceEl.classList.add('hidden');
+    fourEyeConfidenceEl.innerHTML = '';
+    return;
+  }
+  let level = 'high';
+  if (confidence < 50) level = 'low';
+  else if (confidence < 80) level = 'medium';
+  fourEyeConfidenceEl.className = `confidence-badge confidence-${level}`;
+  fourEyeConfidenceEl.innerHTML =
+    `<span class="confidence-label">Confidence</span><span class="confidence-value">${confidence}%</span>`;
+}
+
 function stripCodeFence(text) {
   const trimmed = text.trim();
   const match = trimmed.match(/```[^\n]*\n([\s\S]*?)```/);
@@ -733,6 +787,10 @@ repairBtn.addEventListener('click', async () => {
   copyRepairBtn.classList.add('hidden');
   explainBtn.classList.add('hidden');
   explainSection.classList.add('hidden');
+  fourEyeCheckBtn.classList.add('hidden');
+  fourEyeSection.classList.add('hidden');
+  fourEyeConfidenceEl.classList.add('hidden');
+  fourEyeConfidenceEl.innerHTML = '';
 
   if (!endpoint) {
     repairDiffEl.innerHTML = '<p>Please enter an endpoint URL.</p>';
@@ -807,6 +865,7 @@ repairBtn.addEventListener('click', async () => {
       copyRepairBtn.classList.remove('hidden');
       copyRepairBtn.textContent = 'Copy';
       explainBtn.classList.remove('hidden');
+      fourEyeCheckBtn.classList.remove('hidden');
     } else {
       repairDiffEl.innerHTML =
         `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
@@ -881,6 +940,55 @@ explainBtn.addEventListener('click', async () => {
       '(it needs to return Access-Control-Allow-Origin for browser requests).</p>';
   } finally {
     explainBtn.disabled = false;
+  }
+});
+
+fourEyeCheckBtn.addEventListener('click', async () => {
+  const endpoint = endpointEl.value.trim();
+  if (!endpoint || !lastFormattedOriginal || !lastRepairedPayment) return;
+
+  const format = paymentFormatSelectEl.value;
+
+  fourEyeSection.classList.remove('hidden');
+  fourEyeCheckBtn.disabled = true;
+  fourEyeConfidenceEl.classList.add('hidden');
+  fourEyeConfidenceEl.innerHTML = '';
+  fourEyeReportEl.innerHTML = '<p>Running four eye check&hellip;</p>';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${tokenEl.value.trim()}`
+      },
+      body: buildFourEyeRequestBody(format, lastFormattedOriginal, lastRepairedPayment)
+    });
+
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+
+    if (res.ok && data && typeof data.response === 'string') {
+      const { confidence, report } = parseFourEyeResponse(data.response);
+      renderConfidence(confidence);
+      fourEyeReportEl.innerHTML = renderMarkdown(report);
+    } else {
+      fourEyeReportEl.innerHTML =
+        `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
+    }
+  } catch (e) {
+    fourEyeReportEl.innerHTML =
+      `<p>Error: ${escapeHtml(e.message)}</p>` +
+      '<p>If this says "Failed to fetch", the endpoint is likely blocking the request via CORS ' +
+      '(it needs to return Access-Control-Allow-Origin for browser requests).</p>';
+  } finally {
+    fourEyeCheckBtn.disabled = false;
   }
 });
 

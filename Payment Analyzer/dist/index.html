@@ -17,11 +17,13 @@
           <span class="brand-tagline">Galileo AI Payment Analyzer</span>
         </div>
       </div>
-      <button id="settingsBtn" type="button" class="icon-btn" title="Settings" aria-label="Settings">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.09-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.24 0-.43.17-.47.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.483.483 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.09.73 1.69.98l.38 2.65c.04.25.24.42.47.42h4c.24 0 .43-.17.47-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
-        </svg>
-      </button>
+      <div class="topbar-actions">
+        <button id="settingsBtn" type="button" class="icon-btn" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.09-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.24 0-.43.17-.47.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.483.483 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.09.73 1.69.98l.38 2.65c.04.25.24.42.47.42h4c.24 0 .43-.17.47-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+          </svg>
+        </button>
+      </div>
     </header>
 
     <div class="panel">
@@ -120,6 +122,7 @@
             <label for="repairDiff">Repaired Payment</label>
             <div class="repair-header-actions">
               <button id="explainBtn" type="button" class="secondary hidden">Explain it to me</button>
+              <button id="fourEyeCheckBtn" type="button" class="secondary hidden">Four Eye Check</button>
               <button id="copyRepairBtn" type="button" class="secondary hidden">Copy</button>
             </div>
           </div>
@@ -129,6 +132,14 @@
         <div class="field hidden" id="explainSection">
           <label for="repairExplanation">Explanation</label>
           <div id="repairExplanation" class="markdown-box"></div>
+        </div>
+
+        <div class="field hidden" id="fourEyeSection">
+          <div class="repair-header">
+            <label for="fourEyeReport">Four Eye Check</label>
+            <div id="fourEyeConfidence" class="confidence-badge hidden"></div>
+          </div>
+          <div id="fourEyeReport" class="markdown-box"></div>
         </div>
       </div>
     </div>
