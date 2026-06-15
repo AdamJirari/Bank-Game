@@ -1,6 +1,5 @@
 const endpointEl = document.getElementById('endpoint');
 const tokenEl = document.getElementById('token');
-const bodyEl = document.getElementById('body');
 const promptEl = document.getElementById('prompt');
 const temperatureEl = document.getElementById('temperature');
 const temperatureValueEl = document.getElementById('temperatureValue');
@@ -9,8 +8,6 @@ const sysInstructionTextEl = document.getElementById('sysInstructionText');
 const newInstructionBtn = document.getElementById('newInstructionBtn');
 const saveInstructionBtn = document.getElementById('saveInstructionBtn');
 const deleteInstructionBtn = document.getElementById('deleteInstructionBtn');
-const responseEl = document.getElementById('response');
-const extractedEl = document.getElementById('extracted');
 const formattedEl = document.getElementById('formatted');
 const sendBtn = document.getElementById('sendBtn');
 
@@ -114,7 +111,7 @@ function buildRequestBody() {
     temperature: parseFloat(temperatureEl.value),
     system_instruction: entry ? entry.instruction : ''
   };
-  return JSON.stringify(body, null, 2);
+  return JSON.stringify(body);
 }
 
 function escapeHtml(str) {
@@ -163,18 +160,17 @@ function renderMarkdown(text) {
 sendBtn.addEventListener('click', async () => {
   const endpoint = endpointEl.value.trim();
   if (!endpoint) {
-    responseEl.value = 'Please enter an endpoint URL.';
+    formattedEl.innerHTML = '<p>Please enter an endpoint URL.</p>';
     return;
   }
 
-  if (promptEl.value.trim()) {
-    bodyEl.value = buildRequestBody();
+  if (!promptEl.value.trim()) {
+    formattedEl.innerHTML = '<p>Please enter a prompt.</p>';
+    return;
   }
 
   sendBtn.disabled = true;
-  responseEl.value = 'Sending...';
-  extractedEl.value = '';
-  formattedEl.innerHTML = '';
+  formattedEl.innerHTML = '<p>Sending&hellip;</p>';
 
   try {
     const res = await fetch(endpoint, {
@@ -183,26 +179,29 @@ sendBtn.addEventListener('click', async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${tokenEl.value.trim()}`
       },
-      body: bodyEl.value
+      body: buildRequestBody()
     });
 
     const text = await res.text();
-    responseEl.value = `Status: ${res.status} ${res.statusText}\n\n${text}`;
 
+    let data;
     try {
-      const data = JSON.parse(text);
-      const extracted = data.response ?? '';
-      extractedEl.value = extracted;
-      formattedEl.innerHTML = renderMarkdown(extracted);
+      data = JSON.parse(text);
     } catch {
-      extractedEl.value = '';
+      data = null;
+    }
+
+    if (res.ok && data && typeof data.response === 'string') {
+      formattedEl.innerHTML = renderMarkdown(data.response);
+    } else {
+      formattedEl.innerHTML =
+        `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
     }
   } catch (e) {
-    responseEl.value =
-      'Error: ' +
-      e.message +
-      '\n\nIf this says "Failed to fetch", the endpoint is likely blocking the request via CORS ' +
-      '(it needs to return Access-Control-Allow-Origin for browser requests).';
+    formattedEl.innerHTML =
+      `<p>Error: ${escapeHtml(e.message)}</p>` +
+      '<p>If this says "Failed to fetch", the endpoint is likely blocking the request via CORS ' +
+      '(it needs to return Access-Control-Allow-Origin for browser requests).</p>';
   } finally {
     sendBtn.disabled = false;
   }

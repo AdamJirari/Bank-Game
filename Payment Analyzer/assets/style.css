@@ -21,13 +21,6 @@ h1 {
   margin: 0 0 20px;
 }
 
-h2 {
-  font-size: 1.1rem;
-  margin: 28px 0 16px;
-  padding-top: 16px;
-  border-top: 1px solid #ddd;
-}
-
 label {
   display: block;
   font-weight: 600;
@@ -135,4 +128,16 @@ button.secondary:hover {
   border-radius: 3px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.85em;
+}
+
+.markdown-box pre {
+  margin: 0.4em 0;
+  padding: 8px 10px;
+  background: #f1f1f1;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.8em;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
