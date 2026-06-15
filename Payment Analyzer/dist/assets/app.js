@@ -673,6 +673,24 @@ chatInputEl.addEventListener('keydown', (e) => {
 let lastRepairedPayment = '';
 let lastFormattedOriginal = '';
 
+const NORMALIZE_INSTRUCTION =
+  'You are an XML formatting normalizer for payment messages. ' +
+  'You will be given an XML payment message whose formatting may be messy - elements may run together on ' +
+  'the same line, indentation may be missing or inconsistent, and line breaks may be missing or misplaced. ' +
+  'Reformat the message so that each XML element starts on its own line with clean, consistent nested ' +
+  'indentation, WITHOUT changing, adding, removing, or correcting any element names, attributes, namespaces, ' +
+  'or values. This is a formatting-only pass - do not fix errors, validate, or alter the content in any way. ' +
+  'Respond with ONLY the reformatted message itself, and nothing else - no explanation, no commentary, ' +
+  'no markdown formatting, and no code fences.';
+
+function buildNormalizeRequestBody(message) {
+  return JSON.stringify({
+    prompt: message,
+    temperature: parseFloat(temperatureEl.value),
+    system_instruction: NORMALIZE_INSTRUCTION
+  });
+}
+
 function buildRepairRequestBody(format, message) {
   const instruction = repairTemplate.split('{format}').join(format);
 
@@ -732,11 +750,37 @@ repairBtn.addEventListener('click', async () => {
   }
 
   repairBtn.disabled = true;
-  repairDiffEl.innerHTML = '<p>Repairing&hellip;</p>';
-
-  const formattedOriginal = formatPaymentMessage(promptEl.value);
+  repairDiffEl.innerHTML = '<p>Normalizing&hellip;</p>';
 
   try {
+    const normalizeRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${tokenEl.value.trim()}`
+      },
+      body: buildNormalizeRequestBody(promptEl.value)
+    });
+
+    const normalizeText = await normalizeRes.text();
+
+    let normalizeData;
+    try {
+      normalizeData = JSON.parse(normalizeText);
+    } catch {
+      normalizeData = null;
+    }
+
+    if (!normalizeRes.ok || !normalizeData || typeof normalizeData.response !== 'string') {
+      repairDiffEl.innerHTML =
+        `<p><strong>Status: ${normalizeRes.status} ${normalizeRes.statusText}</strong></p><pre>${escapeHtml(normalizeText)}</pre>`;
+      return;
+    }
+
+    const formattedOriginal = formatPaymentMessage(stripCodeFence(normalizeData.response));
+
+    repairDiffEl.innerHTML = '<p>Repairing&hellip;</p>';
+
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
