@@ -16,6 +16,13 @@ const settingsBtn = document.getElementById('settingsBtn');
 const settingsOverlay = document.getElementById('settingsOverlay');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const chatSection = document.getElementById('chatSection');
+const chatToggleBtn = document.getElementById('chatToggleBtn');
+const chatPanel = document.getElementById('chatPanel');
+const chatMessagesEl = document.getElementById('chatMessages');
+const chatInputEl = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const chatLimitNoteEl = document.getElementById('chatLimitNote');
 
 // ---------------------------------------------------------------------
 // Settings (endpoint + bearer token), persisted in localStorage
@@ -171,12 +178,16 @@ temperatureEl.addEventListener('input', () => {
 // ---------------------------------------------------------------------
 // Build the request body from prompt + temperature + system instruction
 // ---------------------------------------------------------------------
-function buildRequestBody() {
+function getSelectedInstruction() {
   const entry = instructions.find((e) => e.name === sysInstructionSelectEl.value);
+  return entry ? entry.instruction : '';
+}
+
+function buildRequestBody() {
   const body = {
     prompt: promptEl.value,
     temperature: parseFloat(temperatureEl.value),
-    system_instruction: entry ? entry.instruction : ''
+    system_instruction: getSelectedInstruction()
   };
   return JSON.stringify(body);
 }
@@ -217,12 +228,192 @@ function renderBlock(block) {
 
 function renderMarkdown(text) {
   if (!text) return '';
-  return text
-    .split(/\n\s*\n/)
-    .filter((block) => block.trim())
-    .map(renderBlock)
+
+  const segments = [];
+  const codeBlockRegex = /```[^\n]*\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = codeBlockRegex.exec(text))) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    segments.push({ type: 'code', content: match[1].replace(/\n$/, '') });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+
+  return segments
+    .map((segment) => {
+      if (segment.type === 'code') {
+        return `<pre><code>${escapeHtml(segment.content)}</code></pre>`;
+      }
+      return segment.content
+        .split(/\n\s*\n/)
+        .filter((block) => block.trim())
+        .map(renderBlock)
+        .join('\n');
+    })
     .join('\n');
 }
+
+// ---------------------------------------------------------------------
+// "Chat about this" - follow-up conversation about the analyzed payment
+// ---------------------------------------------------------------------
+const CHAT_MESSAGE_LIMIT = 50;
+
+let chatContext = null;
+let chatHistory = [];
+
+function resetChat() {
+  chatContext = null;
+  chatHistory = [];
+  chatMessagesEl.innerHTML = '';
+  chatInputEl.value = '';
+  chatInputEl.disabled = false;
+  chatSendBtn.disabled = false;
+  chatLimitNoteEl.classList.add('hidden');
+  chatPanel.classList.add('hidden');
+  chatSection.classList.add('hidden');
+  chatToggleBtn.textContent = 'Chat about this';
+}
+
+function startChat(context) {
+  chatContext = context;
+  chatHistory = [];
+  chatMessagesEl.innerHTML = '';
+  chatInputEl.value = '';
+  chatInputEl.disabled = false;
+  chatSendBtn.disabled = false;
+  chatLimitNoteEl.classList.add('hidden');
+  chatPanel.classList.add('hidden');
+  chatToggleBtn.textContent = 'Chat about this';
+  chatSection.classList.remove('hidden');
+}
+
+function appendChatMessage(role, html) {
+  const el = document.createElement('div');
+  el.className = `chat-message ${role}`;
+  el.innerHTML = html;
+  chatMessagesEl.appendChild(el);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  return el;
+}
+
+function buildChatRequestBody(message) {
+  const transcriptParts = [
+    'Original payment message being discussed:',
+    chatContext.prompt,
+    '',
+    'Your initial analysis of that message:',
+    chatContext.initialResponse
+  ];
+
+  chatHistory.forEach((m) => {
+    transcriptParts.push('');
+    transcriptParts.push(`${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`);
+  });
+
+  transcriptParts.push('');
+  transcriptParts.push(`User: ${message}`);
+  transcriptParts.push('');
+  transcriptParts.push('Assistant:');
+
+  const baseInstruction = chatContext.systemInstruction ? `${chatContext.systemInstruction}\n\n` : '';
+  const followUpInstruction =
+    baseInstruction +
+    'You already analyzed the payment message above and provided the initial analysis shown. ' +
+    'You are now in a follow-up conversation with the user about that same payment message and your analysis. ' +
+    'Answer their questions, clarify or expand on your analysis, and help them correct the payment if asked. ' +
+    'Respond conversationally to only the latest User message, using the prior context as needed. ' +
+    'Do not repeat the full original analysis unless asked.';
+
+  return JSON.stringify({
+    prompt: transcriptParts.join('\n'),
+    temperature: chatContext.temperature,
+    system_instruction: followUpInstruction
+  });
+}
+
+async function sendChatMessage() {
+  const message = chatInputEl.value.trim();
+  if (!message || !chatContext || chatHistory.length >= CHAT_MESSAGE_LIMIT) return;
+
+  chatInputEl.value = '';
+  chatInputEl.disabled = true;
+  chatSendBtn.disabled = true;
+
+  appendChatMessage('user', escapeHtml(message).replace(/\n/g, '<br>'));
+  const pendingEl = appendChatMessage('assistant pending', '<em>Thinking&hellip;</em>');
+
+  try {
+    const res = await fetch(endpointEl.value.trim(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${tokenEl.value.trim()}`
+      },
+      body: buildChatRequestBody(message)
+    });
+
+    const text = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+
+    pendingEl.classList.remove('pending');
+
+    if (res.ok && data && typeof data.response === 'string') {
+      pendingEl.innerHTML = renderMarkdown(data.response);
+      chatHistory.push({ role: 'user', content: message });
+      chatHistory.push({ role: 'assistant', content: data.response });
+    } else {
+      pendingEl.innerHTML =
+        `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;
+    }
+  } catch (e) {
+    pendingEl.classList.remove('pending');
+    pendingEl.innerHTML =
+      `<p>Error: ${escapeHtml(e.message)}</p>` +
+      '<p>If this says "Failed to fetch", the endpoint is likely blocking the request via CORS ' +
+      '(it needs to return Access-Control-Allow-Origin for browser requests).</p>';
+  } finally {
+    if (chatHistory.length >= CHAT_MESSAGE_LIMIT) {
+      chatInputEl.disabled = true;
+      chatSendBtn.disabled = true;
+      chatLimitNoteEl.classList.remove('hidden');
+    } else {
+      chatInputEl.disabled = false;
+      chatSendBtn.disabled = false;
+      chatInputEl.focus();
+    }
+  }
+}
+
+chatToggleBtn.addEventListener('click', () => {
+  if (chatPanel.classList.contains('hidden')) {
+    chatPanel.classList.remove('hidden');
+    chatToggleBtn.textContent = 'Hide chat';
+    chatInputEl.focus();
+  } else {
+    chatPanel.classList.add('hidden');
+    chatToggleBtn.textContent = 'Chat about this';
+  }
+});
+
+chatSendBtn.addEventListener('click', sendChatMessage);
+
+chatInputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+});
 
 sendBtn.addEventListener('click', async () => {
   const endpoint = endpointEl.value.trim();
@@ -238,6 +429,7 @@ sendBtn.addEventListener('click', async () => {
 
   sendBtn.disabled = true;
   formattedEl.innerHTML = '<p>Sending&hellip;</p>';
+  resetChat();
 
   try {
     const res = await fetch(endpoint, {
@@ -260,6 +452,12 @@ sendBtn.addEventListener('click', async () => {
 
     if (res.ok && data && typeof data.response === 'string') {
       formattedEl.innerHTML = renderMarkdown(data.response);
+      startChat({
+        prompt: promptEl.value,
+        initialResponse: data.response,
+        systemInstruction: getSelectedInstruction(),
+        temperature: parseFloat(temperatureEl.value)
+      });
     } else {
       formattedEl.innerHTML =
         `<p><strong>Status: ${res.status} ${res.statusText}</strong></p><pre>${escapeHtml(text)}</pre>`;

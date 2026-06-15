@@ -57,6 +57,21 @@
         <label for="formatted">Response</label>
         <div id="formatted" class="markdown-box"></div>
       </div>
+
+      <div class="field hidden" id="chatSection">
+        <button id="chatToggleBtn" type="button" class="secondary">Chat about this</button>
+
+        <div id="chatPanel" class="chat-panel hidden">
+          <div id="chatMessages" class="chat-messages"></div>
+          <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="Ask a follow-up question, or paste a corrected message&hellip;"></textarea>
+            <button id="chatSendBtn" type="button">Send</button>
+          </div>
+          <p id="chatLimitNote" class="chat-hint hidden">
+            Conversation limit reached (50 messages). Run a new analysis to start a fresh chat.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
