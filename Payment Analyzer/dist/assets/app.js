@@ -37,6 +37,13 @@ const chatModeBtn = document.getElementById('chatModeBtn');
 const repairModeBtn = document.getElementById('repairModeBtn');
 const chatModeTab = document.getElementById('chatModeTab');
 const repairModeTab = document.getElementById('repairModeTab');
+const temperatureRepairEl = document.getElementById('temperatureRepair');
+const temperatureRepairValueEl = document.getElementById('temperatureRepairValue');
+const repairTemplateTextEl = document.getElementById('repairTemplateText');
+const repairTemplatePanelEl = document.getElementById('repairTemplatePanel');
+const showRepairTemplateBtn = document.getElementById('showRepairTemplateBtn');
+const saveRepairTemplateBtn = document.getElementById('saveRepairTemplateBtn');
+const resetRepairTemplateBtn = document.getElementById('resetRepairTemplateBtn');
 
 // ---------------------------------------------------------------------
 // Chat Mode / Repair Mode tabs
@@ -257,11 +264,73 @@ deleteFormatBtn.addEventListener('click', () => {
 populatePaymentFormatSelect(paymentFormats[0]);
 
 // ---------------------------------------------------------------------
-// Temperature slider
+// Repair prompt template - shared across all payment formats,
+// persisted in localStorage
 // ---------------------------------------------------------------------
-temperatureEl.addEventListener('input', () => {
-  temperatureValueEl.textContent = parseFloat(temperatureEl.value).toFixed(2);
+const REPAIR_TEMPLATE_KEY = 'paymentAnalyzer.repairTemplate';
+const DEFAULT_REPAIR_TEMPLATE =
+  'You are an automated {format} payment repair engine. ' +
+  'You will be given a {format} payment message that may contain errors, invalid values, or schema/business rule violations. ' +
+  'Correct the message so that it is fully valid and compliant with the {format} format, making the minimal changes ' +
+  'necessary to fix the issues while preserving the original structure and values wherever possible. ' +
+  'Respond with ONLY the corrected payment message itself, and nothing else - no explanation, no commentary, ' +
+  'no markdown formatting, and no code fences.';
+
+function loadRepairTemplate() {
+  const saved = localStorage.getItem(REPAIR_TEMPLATE_KEY);
+  return saved !== null ? saved : DEFAULT_REPAIR_TEMPLATE;
+}
+
+let repairTemplate = loadRepairTemplate();
+repairTemplateTextEl.value = repairTemplate;
+
+function showRepairTemplatePanel() {
+  repairTemplatePanelEl.classList.remove('hidden');
+  showRepairTemplateBtn.textContent = 'Hide';
+}
+
+function hideRepairTemplatePanel() {
+  repairTemplatePanelEl.classList.add('hidden');
+  showRepairTemplateBtn.textContent = 'Show';
+}
+
+showRepairTemplateBtn.addEventListener('click', () => {
+  if (repairTemplatePanelEl.classList.contains('hidden')) {
+    showRepairTemplatePanel();
+  } else {
+    hideRepairTemplatePanel();
+  }
 });
+
+saveRepairTemplateBtn.addEventListener('click', () => {
+  repairTemplate = repairTemplateTextEl.value;
+  localStorage.setItem(REPAIR_TEMPLATE_KEY, repairTemplate);
+  saveRepairTemplateBtn.textContent = 'Saved!';
+  setTimeout(() => {
+    saveRepairTemplateBtn.textContent = 'Save';
+  }, 1500);
+});
+
+resetRepairTemplateBtn.addEventListener('click', () => {
+  if (!confirm('Reset the repair prompt template to its default? This will discard your edits.')) return;
+  repairTemplate = DEFAULT_REPAIR_TEMPLATE;
+  repairTemplateTextEl.value = repairTemplate;
+  localStorage.removeItem(REPAIR_TEMPLATE_KEY);
+});
+
+// ---------------------------------------------------------------------
+// Temperature slider (synced between Chat Mode and Repair Mode)
+// ---------------------------------------------------------------------
+function setTemperature(value) {
+  const formatted = parseFloat(value).toFixed(2);
+  temperatureEl.value = value;
+  temperatureRepairEl.value = value;
+  temperatureValueEl.textContent = formatted;
+  temperatureRepairValueEl.textContent = formatted;
+}
+
+temperatureEl.addEventListener('input', () => setTemperature(temperatureEl.value));
+temperatureRepairEl.addEventListener('input', () => setTemperature(temperatureRepairEl.value));
 
 // ---------------------------------------------------------------------
 // Build the request body from prompt + temperature + system instruction
@@ -605,13 +674,7 @@ let lastRepairedPayment = '';
 let lastFormattedOriginal = '';
 
 function buildRepairRequestBody(format, message) {
-  const instruction =
-    `You are an automated ${format} payment repair engine. ` +
-    `You will be given a ${format} payment message that may contain errors, invalid values, or schema/business rule violations. ` +
-    `Correct the message so that it is fully valid and compliant with the ${format} format, making the minimal changes ` +
-    'necessary to fix the issues while preserving the original structure and values wherever possible. ' +
-    'Respond with ONLY the corrected payment message itself, and nothing else - no explanation, no commentary, ' +
-    'no markdown formatting, and no code fences.';
+  const instruction = repairTemplate.split('{format}').join(format);
 
   return JSON.stringify({
     prompt: message,

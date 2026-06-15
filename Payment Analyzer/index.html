@@ -90,6 +90,29 @@
           </div>
         </div>
 
+        <div class="field">
+          <label for="temperatureRepair">Temperature: <span id="temperatureRepairValue">0.20</span></label>
+          <input type="range" id="temperatureRepair" min="0" max="1" step="0.01" value="0.2" />
+        </div>
+
+        <div class="field">
+          <label for="repairTemplateText">Repair Prompt Template</label>
+          <div class="row">
+            <button id="showRepairTemplateBtn" type="button" class="secondary">Show</button>
+            <button id="resetRepairTemplateBtn" type="button" class="secondary">Reset to Default</button>
+          </div>
+          <div id="repairTemplatePanel" class="hidden">
+            <textarea id="repairTemplateText" placeholder="Repair prompt template&hellip;"></textarea>
+            <p class="chat-hint">
+              Use <code>{format}</code> as a placeholder for the selected Payment Format. This template is
+              shared across all payment formats.
+            </p>
+            <div class="row">
+              <button id="saveRepairTemplateBtn" type="button" class="secondary">Save</button>
+            </div>
+          </div>
+        </div>
+
         <button id="repairBtn" type="button" class="repair">Repair Payment</button>
 
         <div class="field hidden" id="repairSection">
