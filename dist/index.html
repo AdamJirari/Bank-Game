@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deutsche Bank | Galileo AI Payment Analyzer</title>
+  <link rel="icon" type="image/png" href="assets/db-logo.png" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/db-logo.png" alt="Deutsche Bank" class="brand-logo" />
+        <div class="brand-text">
+          <span class="brand-name">Deutsche Bank</span>
+          <span class="brand-tagline">Galileo AI Payment Analyzer</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="settingsBtn" type="button" class="icon-btn" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.09-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.24 0-.43.17-.47.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.483.483 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.09.73 1.69.98l.38 2.65c.04.25.24.42.47.42h4c.24 0 .43-.17.47-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="field">
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" placeholder="Paste the payment message here&hellip;"></textarea>
+      </div>
+
+      <div class="tabs">
+        <button id="chatModeBtn" type="button" class="tab-btn active">Chat Mode</button>
+        <button id="repairModeBtn" type="button" class="tab-btn">Repair Mode</button>
+      </div>
+
+      <div id="chatModeTab" class="tab-content">
+        <div class="field">
+          <label for="temperature">Temperature: <span id="temperatureValue">0.20</span></label>
+          <input type="range" id="temperature" min="0" max="1" step="0.01" value="0.2" />
+        </div>
+
+        <div class="field">
+          <label for="sysInstructionSelect">System Instruction</label>
+          <select id="sysInstructionSelect"></select>
+          <div class="row">
+            <button id="newInstructionBtn" type="button" class="secondary">New</button>
+            <button id="showInstructionBtn" type="button" class="secondary">Show</button>
+            <button id="deleteInstructionBtn" type="button" class="secondary">Delete</button>
+          </div>
+          <div id="sysInstructionPanel" class="hidden">
+            <textarea id="sysInstructionText" placeholder="System instruction for the selected format&hellip;"></textarea>
+            <div class="row">
+              <button id="saveInstructionBtn" type="button" class="secondary">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="sendBtn">Send</button>
+
+        <div class="field">
+          <label for="formatted">Response</label>
+          <div id="formatted" class="markdown-box"></div>
+        </div>
+
+        <div class="field hidden" id="chatSection">
+          <button id="chatToggleBtn" type="button" class="secondary">Chat about this</button>
+
+          <div id="chatPanel" class="chat-panel hidden">
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input-row">
+              <textarea id="chatInput" placeholder="Ask a follow-up question, or paste a corrected message&hellip;"></textarea>
+              <button id="chatSendBtn" type="button">Send</button>
+            </div>
+            <p id="chatLimitNote" class="chat-hint hidden">
+              Conversation limit reached (50 messages). Run a new analysis to start a fresh chat.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="repairModeTab" class="tab-content hidden">
+        <div class="field">
+          <label for="paymentFormatSelect">Payment Format</label>
+          <select id="paymentFormatSelect"></select>
+          <div class="row">
+            <button id="newFormatBtn" type="button" class="secondary">New</button>
+            <button id="deleteFormatBtn" type="button" class="secondary">Delete</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="temperatureRepair">Temperature: <span id="temperatureRepairValue">0.20</span></label>
+          <input type="range" id="temperatureRepair" min="0" max="1" step="0.01" value="0.2" />
+        </div>
+
+        <div class="field">
+          <label for="repairTemplateText">Repair Prompt Template</label>
+          <div class="row">
+            <button id="showRepairTemplateBtn" type="button" class="secondary">Show</button>
+            <button id="resetRepairTemplateBtn" type="button" class="secondary">Reset to Default</button>
+          </div>
+          <div id="repairTemplatePanel" class="hidden">
+            <textarea id="repairTemplateText" placeholder="Repair prompt template&hellip;"></textarea>
+            <p class="chat-hint">
+              Use <code>{format}</code> as a placeholder for the selected Payment Format. This template is
+              shared across all payment formats.
+            </p>
+            <div class="row">
+              <button id="saveRepairTemplateBtn" type="button" class="secondary">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="repairBtn" type="button" class="repair">Repair Payment</button>
+
+        <div class="field hidden" id="repairSection">
+          <div class="repair-header">
+            <label for="repairDiff">Repaired Payment</label>
+            <div class="repair-header-actions">
+              <button id="explainBtn" type="button" class="secondary hidden">Explain it to me</button>
+              <button id="fourEyeCheckBtn" type="button" class="secondary hidden">Four Eye Check</button>
+              <button id="copyRepairBtn" type="button" class="secondary hidden">Copy</button>
+            </div>
+          </div>
+          <div id="repairDiff" class="diff-box"></div>
+        </div>
+
+        <div class="field hidden" id="explainSection">
+          <label for="repairExplanation">Explanation</label>
+          <div id="repairExplanation" class="markdown-box"></div>
+        </div>
+
+        <div class="field hidden" id="fourEyeSection">
+          <div class="repair-header">
+            <label for="fourEyeReport">Four Eye Check</label>
+            <div id="fourEyeConfidence" class="confidence-badge hidden"></div>
+          </div>
+          <div id="fourEyeReport" class="markdown-box"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="overlay hidden">
+    <div class="modal">
+      <h2>Settings</h2>
+
+      <div class="field">
+        <label for="endpoint">Endpoint URL</label>
+        <input type="text" id="endpoint" placeholder="/api/vertex" />
+      </div>
+
+      <div class="field">
+        <label for="token">Bearer Token</label>
+        <input type="text" id="token" placeholder="ya29.a0AfH6..." autocomplete="off" />
+      </div>
+
+      <div class="row">
+        <button id="saveSettingsBtn" type="button">Save</button>
+        <button id="closeSettingsBtn" type="button" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
